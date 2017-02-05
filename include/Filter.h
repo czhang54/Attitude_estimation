@@ -10,34 +10,40 @@ using namespace Eigen;
 
 class World;
 
-class Filter
+
+/* ########## FilterBase (base class for all filters) ########## */
+class FilterBase
 {
 protected:
 
-	World *world;
-	int dim_filter;
-	int dim_space;
+	World *world; // A pointer to the World, set when the filter is initialized
+	int dim_filter; // Dimension of filter state, e.g. dim_filter=4 if quaternion is used
+	int dim_space; // Dimension of space, e.g. dim_space=3 for SO(3)
 	int dim_sensor; // Total dimension of all sensor measurements
-	MatrixXd estimates;
-	RowVectorXd angle_error;
-	VectorXd IC_mean;
-	VectorXd IC_std;
+	MatrixXd estimates; // Mean of filter estimate at all time instants
+	RowVectorXd angle_error; // Rotation angle estimation error at all time instants
+	VectorXd IC_mean; // Mean of initial filter estimate
+	VectorXd IC_std; // Standard deviation in all directions of initial filter estimate
 	
 public:
 
-	Filter(const VectorXd &IC_mean, const VectorXd &IC_std) 
+	FilterBase(const VectorXd &IC_mean, const VectorXd &IC_std) 
 		: IC_mean(IC_mean), IC_std(IC_std) {}
 
+	// Access filter estimates
 	MatrixXd& get_estimates();
 
-	virtual void initialize(default_random_engine &generator); // Initialization is different for EKF, UKF and particle filters
+	// Initialize a filter. 
+	virtual void initialize(default_random_engine &generator); 
 
+	// Update filter estimates (execute filter algorithm)
 	virtual void update(int TI, double dt, default_random_engine &generator);
 
+	// Evaluate estimation error according to some performance measure
 	void performance(int TI);
 
-	friend ostream& operator<<(ostream &out, const Filter *f);
-
+	// Overload << operator
+	friend ostream& operator<<(ostream &out, const FilterBase *f);
 	virtual ostream& message(ostream &out) const;
 
 	friend World;
@@ -45,18 +51,20 @@ public:
 };
 
 
-class KalmanFilter: public Filter
+/* ########## Kalman filters ########## */
+class KalmanFilterBase: public FilterBase
 {
 
 protected:
 	MatrixXd Q_d; // Process noise matrix
 	MatrixXd Q_v; // Sensor noise matrix
-	MatrixXd covariance; // Filter covariance at CURRENT time instant
+	MatrixXd covariance; // Filter covariance, updated at each iteration
 
 public:
-	KalmanFilter(const VectorXd &IC_mean, const VectorXd &IC_std)
-		: Filter(IC_mean, IC_std) {}
+	KalmanFilterBase(const VectorXd &IC_mean, const VectorXd &IC_std)
+		: FilterBase(IC_mean, IC_std) {}
 
+	// Initialize a Kalman filter
 	virtual void initialize(default_random_engine &generator) override;
 
 	// No need to define update() method for KalmanFilter, use override version in MEKF, IEKF etc.
@@ -64,16 +72,17 @@ public:
 };
 
 
-class MEKF: public KalmanFilter
+class MEKF: public KalmanFilterBase
 {
 
 public:
 
 	MEKF(const VectorXd &IC_mean, const VectorXd &IC_std)
-		: KalmanFilter(IC_mean, IC_std) {}
+		: KalmanFilterBase(IC_mean, IC_std) {}
 
-	// No need to re-define initialize() method for MEKF. Will use KalmanFilter::initialize().
+	// No need to re-define initialize() method for MEKF. Use KalmanFilter::initialize().
 
+	// Algorithm fo MEKF
 	virtual void update(int TI, double dt, default_random_engine &generator) override;
 
 	virtual ostream& message(ostream &out) const override;
@@ -81,14 +90,15 @@ public:
 };
 
 
-class IEKF: public KalmanFilter
+class IEKF: public KalmanFilterBase
 {
 
 public: 
 
 	IEKF(const VectorXd &IC_mean, const VectorXd &IC_std)
-		: KalmanFilter(IC_mean, IC_std) {}
+		: KalmanFilterBase(IC_mean, IC_std) {}
 
+	// IEKF algorithm
 	virtual void update(int TI, double dt, default_random_engine &generator) override;
 
 	virtual ostream& message(ostream &out) const override;
@@ -96,7 +106,8 @@ public:
 };
 
 
-class ParticleFilterBase: public Filter{
+/* ########## Particle filters ########## */
+class ParticleFilterBase: public FilterBase{
 
 protected:
 	int N; // Number of particles
@@ -106,34 +117,37 @@ protected:
 public:
 
 	ParticleFilterBase(const VectorXd &IC_mean, const VectorXd &IC_std, const int num_particles)
-		: Filter(IC_mean, IC_std), N(num_particles) {}
+		: FilterBase(IC_mean, IC_std), N(num_particles) {}
 
+	// Initialize a particle filter, generate initial particles
 	virtual void initialize(default_random_engine &generator) override;
 
+	// Generate initial particles from a Gaussian distribution
 	void initialize_gaussian(default_random_engine &generator);
 
-	// void initialize_uniform();
-
-	// No need to define update() method for ParticleFilter, use override version in BPF, FPF etc.
+	// No need to define update() method for ParticleFilter, use override version in BPF and FPF.
 
 	virtual ostream& message(ostream &out) const override;
 
 };
 
 
+/* ParticleFilter (Classical particle filter using sequential imprtance sampling resampling) */
 class ParticleFilter: public ParticleFilterBase
 {
 
-	double diffuse_kernel;
+	double diffuse_kernel; // Noise parameter to diffuse particles after resampling
 
 public:
 
 	ParticleFilter(const VectorXd &IC_mean, const VectorXd &IC_std, const int num_particles, const double diffuse_kernel)
 		: ParticleFilterBase(IC_mean, IC_std, num_particles), diffuse_kernel(diffuse_kernel) {}
 
+	// Particle filter algorithm
 	virtual void update(int TI, double dt, default_random_engine &generator) override;
 
-	void resampling(VectorXd &weights);
+	// Resampling procedure
+	void resampling(VectorXd &weights, default_random_engine &generator);
  
 	virtual ostream& message(ostream &out) const override;
 
@@ -142,23 +156,28 @@ public:
 
 typedef Matrix<MatrixXd, Dynamic, 1> Tensor3Xd; // 3d array (tensor)
 
+/* Feedback particle filter */
 class FPF: public ParticleFilterBase
 {
-	string gain_solver;
-	int TI_subdivide;
-	int num_subdivide;
-
+	string gain_solver; // Name of gain solver
+	int TI_subdivide; // Maximum number of filter steps that further sub-divided
+	int num_subdivide; // Number of subdivided steps within each normal step
+ 
 public:
 
 	FPF(const VectorXd &IC_mean, const VectorXd &IC_std, const int num_particles, string gain_solver, int TI_subdivide=0, int num_subdivide=1)
 		: ParticleFilterBase(IC_mean, IC_std, num_particles), gain_solver(gain_solver), TI_subdivide(TI_subdivide), num_subdivide(num_subdivide) {}
 
+	// FPF algorithm
 	virtual void update(int TI, double dt, default_random_engine &generator) override;
 
+	// Galerkin method to solve gain function
 	void galerkin(VectorXd &h_diff, MatrixXd &K);
 
+	// Compute basis functions on SO(3) for each particle
 	void compute_basis_SO3(const MatrixXd &particles, MatrixXd &Phi);
 
+	// Compute gradient of basis functions on SO(3) for each particle
 	void compute_basisGrad_SO3(const MatrixXd &particles, Tensor3Xd &gradPhi);
 
 	virtual ostream& message(ostream &out) const override;
