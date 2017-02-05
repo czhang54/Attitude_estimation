@@ -14,9 +14,9 @@ using namespace std;
 using namespace Eigen;
 
 
-/* ########## Filter (base class for all filters) ########## */
+/* ########## FilterBase (base class for all filters) definitions ########## */
 
-void Filter::initialize(default_random_engine &generator) {
+void FilterBase::initialize(default_random_engine &generator) {
 	dim_filter = IC_mean.size();
 	dim_space = IC_std.size();
 	estimates = MatrixXd::Zero(dim_filter, world->get_time());
@@ -29,41 +29,40 @@ void Filter::initialize(default_random_engine &generator) {
 	}
 }
 
-void Filter::update(int TI, double dt, default_random_engine &generator){
+void FilterBase::update(int TI, double dt, default_random_engine &generator){
 	estimates.col(TI+1) = estimates.col(TI);
 }
 
-void Filter::performance(int TI){
+void FilterBase::performance(int TI){
+	// Evaluate estimation error according to some performance measure
 	quaternion target_state = world->get_target()->get_state().col(TI);
 	quaternion estimate_error = quaternion_product(inverse_quaternion(estimates.col(TI)), target_state);
 	angle_error(TI) = 2*acos(abs(estimate_error(0)))*180/3.14;
-	// cout << "Estimate error = " << '\n';
 	cout << "angle error = " << 2*acos(abs(estimate_error(0)))*180/3.14 << '\n';
 }
 
-ostream& operator<<(ostream &out, const Filter *f){
+ostream& operator<<(ostream &out, const FilterBase *f){
 	return f->message(out);
 }
 
-ostream& Filter::message(ostream &out) const {
+ostream& FilterBase::message(ostream &out) const {
 	out << "A filter will be implemented" << '\n';
 	return out;
 }
 
 
-/* ########## KalmanFilter (base class for all Kalman-type filters) ########## */
-void KalmanFilter::initialize(default_random_engine &generator){
+/* ########## KalmanFilterBase (base class for all Kalman-type filters) definitions ########## */
+void KalmanFilterBase::initialize(default_random_engine &generator){
 
-	Filter::initialize(generator); // Note the scope operator
+	FilterBase::initialize(generator); 
 
 	VectorXd IC_cov = IC_std.array().square(); // square().asDiagonal() is not allowed!
 	covariance = IC_cov.asDiagonal(); // Initialize filter covariance, updated using MEKF::update
 
-	// Construct noise matrices Q_d, Q_v
+	// Compute noise matrices Q_d, Q_v
 	VectorXd process_noise_cov = world->get_target()->get_process_noise().array().square();
 	Q_d = process_noise_cov.asDiagonal();
 
-	// Simpler way: dim_sum = 3*world.get_sensor().size() if only vector measurements are used.
 	int dim_sum = 0;
 	Q_v = MatrixXd::Zero(dim_sensor, dim_sensor);
 	for (int i=0; i<world->get_sensor().size(); ++i){
@@ -72,12 +71,10 @@ void KalmanFilter::initialize(default_random_engine &generator){
 		Q_v.block(dim_sum, dim_sum, dim, dim) = sensor_noise_cov.asDiagonal();
 		dim_sum += dim;
 	}
-	// cout << Q_d << '\n';
-	// cout << Q_v << '\n';
 }
 
 
-/* ########## MEKF ########## */
+/* ########## MEKF definitions ########## */
 
 void MEKF::update(int TI, double dt, default_random_engine &generator){
 
@@ -85,36 +82,31 @@ void MEKF::update(int TI, double dt, default_random_engine &generator){
 
 	if (TI == 0){performance(TI);}
 
-	/* PROPAGATION */
+	/* PREDICTION */
 	VectorXd target_velocity = world->get_target()->get_velocity().col(TI);
-	quaternion pred_mean = dq(estimates.col(TI), target_velocity*dt);
+	quaternion predict_mean = dq(estimates.col(TI), target_velocity*dt);
 	MatrixXd Phi = identity(Q_d.rows()) - skew(target_velocity)*dt;
-	MatrixXd pred_cov = Phi*covariance*(Phi.transpose()) + Q_d*dt;
+	MatrixXd predict_cov = Phi*covariance*(Phi.transpose()) + Q_d*dt;
 
 	/* MEASUREMENT UPDATE */
-	// Compute Jacobian matrix and innovation
+	// Compute Jacobian matrix H and innovation vector I
 	MatrixXd H = MatrixXd::Zero(dim_sensor, dim_space);
 	VectorXd I = VectorXd::Zero(dim_sensor);
 	int count(0);
 	for (Sensor *s: world->get_sensor()){
 		VectorXd measurement = s->get_measurements().col(TI+1);
 		int dim = measurement.size();
-		H.block(count, 0, dim, dim_space) = s->jacobian(pred_mean);
-		I.segment(count, dim) = s->get_measurements().col(TI+1) - s->model(pred_mean);
-		// cout << s->get_measurements().col(TI+1).transpose() << '\n';
-		// cout << s->model(pred_mean).transpose() << '\n';
-		// cout << I.segment(count, dim).transpose() << '\n';
+		H.block(count, 0, dim, dim_space) = s->jacobian(predict_mean);
+		I.segment(count, dim) = s->get_measurements().col(TI+1) - s->model(predict_mean);
 		count += dim;
 	}
-	// cout << I.transpose() << '\n';
-	// Compute gain matrix
-	MatrixXd S = H*pred_cov*(H.transpose()) + Q_v;
-	MatrixXd K = pred_cov*(H.transpose())*(S.inverse());
+	// Compute gain matrix K
+	MatrixXd S = H*predict_cov*(H.transpose()) + Q_v;
+	MatrixXd K = predict_cov*(H.transpose())*(S.inverse());
 
-	// Update mean and covariance;
-	quaternion update_mean = quaternion_product(pred_mean, MRP2q(K*I)); 
-	// cout << update_mean.transpose() << '\n';
-	covariance = (identity(Q_d.rows()) - K*H)*pred_cov;
+	// Update mean and covariance of MEKF;
+	quaternion update_mean = quaternion_product(predict_mean, MRP2q(K*I)); 
+	covariance = (identity(Q_d.rows()) - K*H)*predict_cov;
 	estimates.col(TI+1) = update_mean;
 
 	performance(TI+1);
@@ -127,7 +119,7 @@ ostream& MEKF::message(ostream &out) const {
 }
 
 
-/* ########## IEKF ########## */
+/* ########## IEKF definitions ########## */
 
 void IEKF::update(int TI, double dt, default_random_engine &generator){
 
@@ -135,33 +127,33 @@ void IEKF::update(int TI, double dt, default_random_engine &generator){
 
 	if (TI == 0){performance(TI);}
 
-	/* PROPAGATION */
+	/* PREDICTION */
 	VectorXd target_velocity = world->get_target()->get_velocity().col(TI);
-	quaternion pred_mean = dq(estimates.col(TI), target_velocity*dt);
-	RotationMatrix pred_mean_R = q2R(pred_mean);
-	MatrixXd pred_cov = covariance + Q_d*dt;
+	quaternion predict_mean = dq(estimates.col(TI), target_velocity*dt);
+	RotationMatrix predict_mean_R = q2R(predict_mean);
+	MatrixXd predict_cov = covariance + Q_d*dt;
 
 	/* MEASUREMENT UPDATE */
-	// Compute Jacobian matrix and innovation
+	// Compute Jacobian matrix H and innovation vector I
 	MatrixXd H = MatrixXd::Zero(dim_sensor, dim_space);
 	VectorXd I = VectorXd::Zero(dim_sensor);
 	int count(0);
 	for (Sensor *s: world->get_sensor()){
 		VectorXd measurement = s->get_measurements().col(TI+1);
 		int dim = measurement.size();
-		H.block(count, 0, dim, dim_space) = pred_mean_R*(s->jacobian(pred_mean))*(pred_mean_R.transpose());
-		I.segment(count, dim) = pred_mean_R*(s->get_measurements().col(TI+1) - s->model(pred_mean));
+		H.block(count, 0, dim, dim_space) = predict_mean_R*(s->jacobian(predict_mean))*(predict_mean_R.transpose());
+		I.segment(count, dim) = predict_mean_R*(s->get_measurements().col(TI+1) - s->model(predict_mean));
 		// cout << s->get_measurements().col(TI+1).transpose() << '\n';
 		count += dim;
 	}
 
-	// Compute gain matrix
-	MatrixXd S = H*pred_cov*(H.transpose()) + Q_v;
-	MatrixXd K = pred_cov*(H.transpose())*(S.inverse());
+	// Compute gain matrix K
+	MatrixXd S = H*predict_cov*(H.transpose()) + Q_v;
+	MatrixXd K = predict_cov*(H.transpose())*(S.inverse());
 
-	// Update mean and covariance;
-	quaternion update_mean = dq(pred_mean, K*I, "global_frame");
-	covariance = (identity(Q_d.rows()) - K*H)*pred_cov;
+	// Update mean and covariance of IEKF;
+	quaternion update_mean = dq(predict_mean, K*I, "global_frame");
+	covariance = (identity(Q_d.rows()) - K*H)*predict_cov;
 	estimates.col(TI+1) = update_mean;
 
 	performance(TI+1);
@@ -174,16 +166,16 @@ ostream& IEKF::message(ostream &out) const {
 }
 
 
-/* ########## ParticleFilterBase (base class for all particle-based filters) ########## */
+/* ########## ParticleFilterBase (base class for all particle-based filters) definitions ########## */
 
 void ParticleFilterBase::initialize(default_random_engine &generator){
 
-	Filter::initialize(generator);
+	FilterBase::initialize(generator);
 
 	// Generate initial particles
 	particles = MatrixXd::Zero(dim_filter, N);
 
-	ParticleFilterBase::initialize_gaussian(generator); // Scope operator seems optional here
+	initialize_gaussian(generator); 
 	// cout << "Initial particles generated" << '\n';
 
 	sensor_noise_cov = VectorXd::Zero(dim_sensor);
@@ -197,9 +189,6 @@ void ParticleFilterBase::initialize(default_random_engine &generator){
 
 void ParticleFilterBase::initialize_gaussian(default_random_engine &generator){
 	// First generate samples in Lie algebra (LA), and then project onto Lie group using exponential map
-
-	// default_random_engine generator;
-	// generator.seed(static_cast<unsigned int>(std::time(0))); 
 
 	for (int i=0; i<N; i++){	
 		VectorXd particle_LA(dim_space);
@@ -218,7 +207,7 @@ ostream& ParticleFilterBase::message(ostream &out) const {
 	}
 
 
-/* ########## ParticleFilter (Classical particle filter using sequential imprtance sampling resampling) ########## */
+/* ########## ParticleFilter definitions (Classical particle filter using sequential imprtance sampling resampling) ########## */
 
 void ParticleFilter::update(int TI, double dt, default_random_engine &generator){
 
@@ -226,7 +215,7 @@ void ParticleFilter::update(int TI, double dt, default_random_engine &generator)
 
 	if (TI == 0){performance(TI);}
 
-	/* PROPAGATION */
+	/* PREDICTION */
 	VectorXd target_velocity = world->get_target()->get_velocity().col(TI);
 	VectorXd process_noise_std = world->get_target()->get_process_noise();
 	// Add process noise
@@ -236,11 +225,12 @@ void ParticleFilter::update(int TI, double dt, default_random_engine &generator)
 		process_noise(d) = distribution(generator);
 	}
 	for (int i=0; i<N; ++i){
+		// Prediction for each particle
 		particles.col(i) = dq(particles.col(i), target_velocity*dt + process_noise);
 	}
 
 	/* MEASUREMENT UPDATE */
-	// Compute weights
+	// Compute importance weights
 	VectorXd w = VectorXd::Zero(N);
 	for (Sensor *s: world->get_sensor()){
 		VectorXd measurement = s->get_measurements().col(TI+1);
@@ -256,12 +246,9 @@ void ParticleFilter::update(int TI, double dt, default_random_engine &generator)
 	weights /= sum; // Normalize weights
 
 	// Resampling
-	resampling(weights);
+	resampling(weights, generator);
 
-	// Diffuse particles
-	// default_random_engine generator;
-	// generator.seed(static_cast<unsigned int>(std::time(0))); 
-
+	// Diffuse particles to maintain particle diversity
 	for (int i=0; i<N; i++){	
 		VectorXd particle_LA(dim_space);
 		for (int d=0; d<dim_space; d++){
@@ -278,12 +265,12 @@ void ParticleFilter::update(int TI, double dt, default_random_engine &generator)
 }
 
 
-void ParticleFilter::resampling(VectorXd &weights){
+void ParticleFilter::resampling(VectorXd &weights, default_random_engine &generator){
 	// Resampling with replacement
 	MatrixXd resampled_particles = MatrixXd::Zero(dim_filter, N);
 
-	default_random_engine generator;
-	generator.seed(static_cast<unsigned int>(std::time(0)));
+	// default_random_engine generator;
+	// generator.seed(static_cast<unsigned int>(std::time(0)));
 	uniform_real_distribution<double> uniform(0, 1/(static_cast<double>(N)));
 	double r = uniform(generator);
 
@@ -312,7 +299,7 @@ ostream& ParticleFilter::message(ostream &out) const {
 }
 
 
-/* ########## FPF (Feedback particle filter with multiple gain solver options) ########## */
+/* ########## FPF definitions (Feedback particle filter with multiple gain solver options) ########## */
 
 void FPF::update(int TI, double dt, default_random_engine &generator){
 
@@ -328,9 +315,10 @@ void FPF::update(int TI, double dt, default_random_engine &generator){
 	if (TI >= TI_subdivide){num_subdivide = 1;}
 
 	for (int n=0; n<num_subdivide; ++n){
-		// Compute control force in Lie algebra for each particle
+		// Compute control in Lie algebra for each particle
 		MatrixXd control = MatrixXd::Zero(dim_space, N);
 		for (Sensor *s: world->get_sensor()){
+			// Iterate over all sensors
 			VectorXd sensor_noise_cov = s->get_sensor_noise().array().square();
 			VectorXd measurement = s->get_measurements().col(TI);
 			MatrixXd h = MatrixXd::Zero(measurement.rows(), N);
@@ -338,11 +326,13 @@ void FPF::update(int TI, double dt, default_random_engine &generator){
 				h.col(i) = s->model(particles.col(i));
 			}
 			for (int j=0; j<measurement.rows(); ++j){
+				// For each sensor measurement, compute innovation I and gain K for EACH particle
 				VectorXd h_diff = h.row(j).array() - h.row(j).mean();
 				VectorXd I = measurement(j) - 0.5*(h.row(j).array() + h.row(j).mean());
 				MatrixXd K = MatrixXd::Zero(dim_space, N);
-				// Compute gain function
-				galerkin(h_diff, K);
+
+				galerkin(h_diff, K); // Compute gain values using a Galerkin algorithm which is standard for numerically solving a PDE
+
 				for (int n=0; n<dim_space; ++n){
 					RowVectorXd KI = (K.row(n).array())*(I.transpose().array())/(sensor_noise_cov(j)*num_subdivide);
 					control.row(n) = control.row(n) + KI;
@@ -350,20 +340,22 @@ void FPF::update(int TI, double dt, default_random_engine &generator){
 			}
 		}
 		for (int i=0; i<N; ++i){
-			// Add process noise
+			// Add process noise for each particle
 			VectorXd process_noise = VectorXd::Constant(dim_space, 0);
 			for (int d=0; d<dim_space; ++d){
 				normal_distribution<double> distribution(0, process_noise_std(d)*sqrt(dt_subdivide));
 				process_noise(d) = distribution(generator);
 			}
+			// Propagate each particle
 			particles.col(i) = dq(particles.col(i), control.col(i) + target_velocity*dt_subdivide + process_noise );
 		}
 	}
 
-	estimates.col(TI+1) = quaternion_mean(particles);
+	estimates.col(TI+1) = quaternion_mean(particles); // Compute average of quaternion particles
 
 	performance(TI+1);
 }
+
 
 typedef Matrix<MatrixXd, Dynamic, 1> Tensor3Xd; // 3d array (tensor)
 
@@ -371,18 +363,18 @@ void FPF::galerkin(VectorXd &h_diff, MatrixXd &K){
 
 	const int L = 9; // Number of basis functions
 
-	MatrixXd  Phi(L, N);
-	Tensor3Xd gradPhi(dim_space);
-	// Need to initialize gradPhi in full size
+	MatrixXd  Phi(L, N); // Basis function evaluated at each particle
+	Tensor3Xd gradPhi(dim_space); // Gradient of basis function evaluated at each particle
 	for (int d=0; d<dim_space; ++d){
 		gradPhi(d) = MatrixXd::Zero(L, N);
 	}
 
-	// Evaluate basis functions and their gradient
+	// Evaluate basis functions and their gradient on SO(3)
 	compute_basis_SO3(particles, Phi);
 	compute_basisGrad_SO3(particles, gradPhi);
+
 	// Solve coefficients
-	MatrixXd A = MatrixXd::Zero(L, L);
+	MatrixXd A = MatrixXd::Zero(L, L); 
 	VectorXd b = VectorXd::Zero(L);	
 	VectorXd k = VectorXd::Zero(L);
 
