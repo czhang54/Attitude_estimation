@@ -7,7 +7,7 @@
 
 #include <Eigen/Dense>
 
-using namespace std;
+// using namespace std;
 using namespace Eigen;
 
 typedef Eigen::Vector4d quaternion;
@@ -17,7 +17,7 @@ typedef Eigen::Matrix3d RotationMatrix;
 quaternion quaternion_product(const quaternion &q1, const quaternion &q2);
 
 // Update quaternion according to angular velocity vector defined in body/global frame
-quaternion dq(const quaternion &q, const Vector3d &omega, string frame="body_frame");
+quaternion dq(const quaternion &q, const Vector3d &omega, std::string frame="body_frame");
 
 // Convert quaternion to rotation matrix
 RotationMatrix q2R(const quaternion &q);
