@@ -10,59 +10,63 @@
 
 #include <Eigen/Dense>
 
-using namespace std; 
+// using namespace std; 
 using namespace Eigen;
 
 
-class Target; // Need to declare Target class to initialize World object
-class Sensor;
-class Filter;
+namespace Attitude_estimation{
 
+	class Target; 
+	class Sensor;
+	class FilterBase;
 
-class World
-{
-	RowVectorXd time;
-	int dim_space;
-	int dim_state;
-	int num_times;
-	Target *target; // Need declaration of Target class as above
-	vector<Sensor*> sensor_list;
-	vector<Filter*> filter_list;
-	
+	class World
+	{
+		RowVectorXd time;
+		int dim_space; // Dimension of space, e.g. dim_space=3 for SO(3)
+		int dim_state; // Dimension of target/filter state, e.g. dim_filter=4 if quaternion is used
+		int num_times; // Length of simulation iterations
+		Target *target; // Pointer to the target, only one target is considered
+		std::vector<Sensor*> sensor_list; // List of pointers pointing to the added sensors
+		std::vector<FilterBase*> filter_list; // List of pointers pointing to the added filters
+		
 
-public:
-	// Need start, stop, step, dim to start
-	World(double start, double stop, double step, int dim_space, int dim_state);
+	public:
+		World(double start, double stop, double step, int dim_space, int dim_state);
 
-	int get_time() const;
-	int get_space_dim() const;
-	int get_state_dim() const;
-	Target* get_target() const;
-	vector<Sensor*> get_sensor() const;
-	vector<Filter*> get_filter() const;
+		// The world give public access to acquire space-time dimensions and reach all the relevant objects via pointers
+		int get_time() const;
+		int get_space_dim() const;
+		int get_state_dim() const;
+		Target* get_target() const;
+		std::vector<Sensor*> get_sensor() const;
+		std::vector<FilterBase*> get_filter() const;
 
-	// Overload << operator
-	friend ostream& operator<<(ostream &out, World &world);
+		// Overload << operator
+		friend std::ostream& operator<<(std::ostream &out, World &world);
 
-	// Add and simulate targets
-	void add_target(Target *t);
+		// Add a target
+		void add_target(Target *t);
 
-	void simulate_target(default_random_engine &generator);
+		// Simulate the target
+		void simulate_target(std::default_random_engine &generator);
 
-	// Add and simulate sensors
-	void add_sensor(Sensor *s);
+		// Add a sensor
+		void add_sensor(Sensor *s);
 
-	void simulate_sensor(default_random_engine &generator);
+		// Simulate all sensors in list
+		void simulate_sensor(std::default_random_engine &generator);
 
-	// Add and simulation filters
-	void add_filter(Filter *f);
+		// Add a filter
+		void add_filter(FilterBase *f);
 
-	void simulate_filter(default_random_engine &generator);
+		// Simulate all filters in list
+		void simulate_filter(std::default_random_engine &generator);
 
-	
-};
+		
+	};
 
-
+}
 
 
 

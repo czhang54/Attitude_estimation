@@ -5,9 +5,9 @@
 #include <Eigen/Dense>
 #include <Eigen/Eigenvalues>
 
-#include "../include/Lie_group.h"
+#include "Lie_group.h"
 
-using namespace std;
+// using namespace std;
 using namespace Eigen;
 
 
@@ -22,10 +22,10 @@ quaternion quaternion_product(const quaternion &q1, const quaternion &q2){
 }
 
 // Update quaternion according to angular velocity vector defined in body/global frame
-quaternion dq(const quaternion &q, const Vector3d &omega, string frame){
+quaternion dq(const quaternion &q, const Vector3d &omega, std::string frame){
 	quaternion exp;
 	double norm = omega.norm();
-	exp(0) = cos(norm/2.0);
+	exp(0) = std::cos(norm/2.0);
 	exp.tail(3) = omega*sin(norm/2.0)/norm;
 	if (frame.compare("body_frame") == 0){
 		return quaternion_product(q, exp);
@@ -94,8 +94,8 @@ quaternion angle_axis(const Vector3d axis, double angle){
 	quaternion q = quaternion::Zero();
 	double theta = angle*M_PI/180.0; 
 	Vector3d omega = axis/(axis.norm());
-	q(0) = cos(theta/2.0);
-	q.tail(3) = omega*sin(theta/2.0);
+	q(0) = std::cos(theta/2.0);
+	q.tail(3) = omega*std::sin(theta/2.0);
 
 	return q;
 }

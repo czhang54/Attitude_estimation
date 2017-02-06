@@ -9,89 +9,106 @@
 
 #include "Lie_group.h"
 
-using namespace std;
+// using namespace std;
 using namespace Eigen;
 
-class World;
-class Target;
 
-class Sensor
-{
-protected:
+namespace Attitude_estimation{
 
-	World *world;
-	int dim;
-	MatrixXd measurements;
-	VectorXd noise_std;
+	class World;
+	class Target;
 
-public:
+	/* ########## Sensor (base class for all sensors) ########## */
+	class Sensor
+	{
+	protected:
 
-	Sensor(int dim_sensor, const VectorXd &noise_std)
-		: dim(dim_sensor), noise_std(noise_std) {};
+		World *world; // A pointer to the World, set when the sensor is initialized
+		int dim; // Dimension of the measurement, e.g. dim=3 for gyroscope, accelerometer and magnetometer
+		MatrixXd measurements; // Raw measurement data obtained at all times
+		VectorXd noise_std; // Sensor noise parameter for each measurement component
 
-	MatrixXd& get_measurements() {return measurements;}
+	public:
 
-	VectorXd& get_sensor_noise() {return noise_std;}
+		Sensor(int dim_sensor, const VectorXd &noise_std)
+			: dim(dim_sensor), noise_std(noise_std) {};
 
-	void initialize(); // Set time horizon
+		// Give access to acquire the measurement data, used by filters
+		MatrixXd& get_measurements() {return measurements;}
 
-	virtual VectorXd model(const quaternion &q);
+		// Give access to acquire the noise parameters, used by filters
+		VectorXd& get_sensor_noise() {return noise_std;}
 
-	virtual MatrixXd jacobian(const quaternion &q);
+		// Initialize the sensor
+		void initialize(); 
 
-	virtual void observe(int TI, double dt, default_random_engine &generator);
+		// A model that transform target state to measurement
+		virtual VectorXd model(const quaternion &q);
 
-	friend ostream& operator<<(ostream &out, const Sensor *s){
-		return s->message(out);
-	}
+		// Jacobian matrix of sensor model, used by Kalman filters but not particle filters
+		virtual MatrixXd jacobian(const quaternion &q);
 
-	virtual ostream& message(ostream &out) const;
+		// Generate measurements at ALL times
+		virtual void observe(int TI, double dt, std::default_random_engine &generator);
 
-	friend World;
+		friend std::ostream& operator<<(std::ostream &out, const Sensor *s){
+			return s->message(out);
+		}
 
-};
+		virtual std::ostream& message(std::ostream &out) const;
 
+		friend World;
 
-class Accelerometer: public Sensor
-{
-	Vector3d gravity;
-
-public:
-
-	Accelerometer(int dim_sensor, const VectorXd &noise_std, const Vector3d &gravity)
-		: Sensor(dim_sensor, noise_std), gravity(gravity) {}
-
-	virtual VectorXd model(const quaternion &q) override;
-
-	virtual MatrixXd jacobian(const quaternion &q) override;
-
-	virtual void observe(int TI, double dt, default_random_engine &generator) override;
-
-	virtual ostream& message(ostream &out) const override;
-
-};
+	};
 
 
-class Magnetometer: public Sensor{
+	/* Accelerometer class */
+	class Accelerometer: public Sensor
+	{
+		Vector3d gravity; // Gravity vector
 
-	Vector3d magnetic_field;
+	public:
 
-public:
+		Accelerometer(int dim_sensor, const VectorXd &noise_std, const Vector3d &gravity)
+			: Sensor(dim_sensor, noise_std), gravity(gravity) {}
 
-	Magnetometer(int dim_sensor, const VectorXd &noise_std, const Vector3d &magnetic_field)
-		: Sensor(dim_sensor, noise_std), magnetic_field(magnetic_field) {}
+		// Model of accelerometer
+		virtual VectorXd model(const quaternion &q) override;
 
-	virtual VectorXd model(const quaternion &q) override;
+		// Jacobian matrix of the model
+		virtual MatrixXd jacobian(const quaternion &q) override;
 
-	virtual MatrixXd jacobian(const quaternion &q) override;
+		// Generate measurements at ALL times
+		virtual void observe(int TI, double dt, std::default_random_engine &generator) override;
 
-	virtual void observe(int TI, double dt, default_random_engine &generator) override;
+		virtual std::ostream& message(std::ostream &out) const override;
 
-	virtual ostream& message(ostream &out) const override;
-
-};
+	};
 
 
+	class Magnetometer: public Sensor{
+
+		Vector3d magnetic_field;
+
+	public:
+
+		Magnetometer(int dim_sensor, const VectorXd &noise_std, const Vector3d &magnetic_field)
+			: Sensor(dim_sensor, noise_std), magnetic_field(magnetic_field) {}
+
+		// Model of magnetometer
+		virtual VectorXd model(const quaternion &q) override;
+
+		// Jacobian matrix of the model
+		virtual MatrixXd jacobian(const quaternion &q) override;
+
+		// Generate measurements at ALL times
+		virtual void observe(int TI, double dt, std::default_random_engine &generator) override;
+
+		virtual std::ostream& message(std::ostream &out) const override;
+
+	};
+
+}
 
 
 
