@@ -1,8 +1,5 @@
 #include <iostream>
-#include <string>
 #include <vector>
-#include <cmath>
-#include <map>
 #include <random>
 
 #include <Eigen/Dense>
@@ -15,7 +12,7 @@
 #include "Lie_group.h" 
 
 // using namespace std;
-using namespace Eigen;
+// using namespace Eigen;
 using namespace Attitude_estimation;
 
 
@@ -41,14 +38,14 @@ int main()
 	/* Simulation parameters */
 
 	// Process noise is defined in tangent space of the manifold, hence its dimension equals dim_space
-	VectorXd process_noise_std = VectorXd::Constant(dim_space, 0.2);
-	VectorXd sensor_noise_std = VectorXd::Constant(dim_sensor, 30*M_PI/180.0);
+	Eigen::VectorXd process_noise_std = Eigen::VectorXd::Constant(dim_space, 0.2);
+	Eigen::VectorXd sensor_noise_std  = Eigen::VectorXd::Constant(dim_sensor, 30*M_PI/180.0);
 
 	// Target and filter initialization
-	quaternion IC_target = angle_axis(Vector3d(3,1,4), 180); // Initial attitude of target
+	quaternion IC_target = angle_axis(Eigen::Vector3d(3,1,4), 180); // Initial attitude of target
 	quaternion IC_filter(1,0,0,0); // Mean of initial filter estimate
 	double IC_std_degree = 60; // Standard deviation (in degree) of initial filter estimate
-	VectorXd IC_std = VectorXd::Constant(3, IC_std_degree*M_PI/180.0); 
+	Eigen::VectorXd IC_std = Eigen::VectorXd::Constant(3, IC_std_degree*M_PI/180.0); 
 
 
 	/* Simulate target */
@@ -63,13 +60,13 @@ int main()
 
 	/* Generate sensor measurements */
 	// Accelerometer: measures gravity vector in sensor frame
-	const Vector3d gravity(0,0,1); // Gravity vector
+	const Eigen::Vector3d gravity(0,0,1); // Gravity vector
 	Accelerometer accelerometer(dim_sensor, sensor_noise_std, gravity);
 	world.add_sensor(&accelerometer);
 	accelerometer.initialize();
 
 	// Magnetometer: ma=easures local megnetic field vector in sensor frame
-	const Vector3d magnetic_field(1,0,1); // Magnetic field vector
+	const Eigen::Vector3d magnetic_field(1,0,1); // Magnetic field vector
 	Magnetometer magnetometer(dim_sensor, sensor_noise_std, magnetic_field);
 	world.add_sensor(&magnetometer);
 	magnetometer.initialize();
@@ -110,5 +107,6 @@ int main()
 	return 0;
 
 }
+
 
 
