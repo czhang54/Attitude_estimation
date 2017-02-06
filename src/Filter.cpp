@@ -11,10 +11,12 @@
 #include "Lie_group.h"
 
 // using namespace std;
-using namespace Eigen;
+// using namespace Eigen;
 
 
 namespace Attitude_estimation{
+
+	using namespace Eigen;
 
 	/* ########## FilterBase (base class for all filters) definitions ########## */
 

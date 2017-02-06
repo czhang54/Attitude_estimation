@@ -1,8 +1,5 @@
 #include <iostream>
-#include <string>
 #include <vector>
-#include <array>
-#include <cmath>
 #include <random>
 
 #include <Eigen/Dense>
@@ -13,7 +10,7 @@
 #include "Filter.h"
 
 // using namespace std; 
-using namespace Eigen;
+// using namespace Eigen;
 
 
 namespace Attitude_estimation{
@@ -21,7 +18,7 @@ namespace Attitude_estimation{
 	World::World(double start, double stop, double step, int dim_space, int dim_state){
 		// dim = d;
 		num_times = static_cast<int>((stop-start)/step) + 1;
-		RowVectorXd Time = RowVectorXd::LinSpaced(num_times, start, stop);
+		Eigen::RowVectorXd Time = RowVectorXd::LinSpaced(num_times, start, stop);
 		time = Time;
 		this->dim_space = dim_space; // MUST use this-> when assigning a variable using input with same identifier!
 		this->dim_state = dim_state;

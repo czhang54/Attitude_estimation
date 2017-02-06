@@ -1,5 +1,4 @@
 #include <iostream>
-#include <cmath>
 #include <random>
 
 #include <Eigen/Dense>
@@ -10,10 +9,12 @@
 #include "Sensor.h"
 
 // using namespace std;
-using namespace Eigen;
+// using namespace Eigen;
 
 
 namespace Attitude_estimation{
+
+	using namespace Eigen;
 
 	/* ########## Sensor (base class for all sensors) definitions ########## */
 	void Sensor::initialize(){
