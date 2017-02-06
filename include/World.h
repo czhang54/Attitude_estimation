@@ -2,27 +2,25 @@
 #define WORLD
 
 #include <iostream>
-#include <string>
 #include <vector>
-#include <array>
-#include <cmath>
 #include <random>
 
 #include <Eigen/Dense>
 
 // using namespace std; 
-using namespace Eigen;
+// using namespace Eigen;
 
 
 namespace Attitude_estimation{
 
+	// Forward declaration
 	class Target; 
 	class Sensor;
 	class FilterBase;
 
 	class World
 	{
-		RowVectorXd time;
+		Eigen::RowVectorXd time;
 		int dim_space; // Dimension of space, e.g. dim_space=3 for SO(3)
 		int dim_state; // Dimension of target/filter state, e.g. dim_filter=4 if quaternion is used
 		int num_times; // Length of simulation iterations

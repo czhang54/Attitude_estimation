@@ -9,15 +9,15 @@
 #include "Target.h"
 
 // using namespace std;
-using namespace Eigen;
+// using namespace Eigen;
 
 
 namespace Attitude_estimation{
 
 	/* ########## Target (base class for all targets) definitions ########## */
 	void Target::initialize(){
-		state = MatrixXd::Zero(world->get_state_dim(), world->get_time());
-		angular_velocity = MatrixXd::Zero(world->get_space_dim(), world->get_time());
+		state = Eigen::MatrixXd::Zero(world->get_state_dim(), world->get_time());
+		angular_velocity = Eigen::MatrixXd::Zero(world->get_space_dim(), world->get_time());
 		state.col(0) = IC; // Deterministic initialization is used by default
 	}
 
@@ -36,7 +36,7 @@ namespace Attitude_estimation{
 		angular_velocity(2,TI) = std::cos(2*M_PI*t/17.0);
 
 		// Add process noise in EACH velocity direction
-		VectorXd process_noise = VectorXd::Constant(world->get_space_dim(),0);
+		Eigen::VectorXd process_noise = Eigen::VectorXd::Constant(world->get_space_dim(),0);
 		for (int d=0; d<angular_velocity.rows(); ++d){
 			std::normal_distribution<double> distribution(0, process_noise_std(d)*sqrt(dt));
 			process_noise(d) = distribution(generator);

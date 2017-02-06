@@ -2,20 +2,19 @@
 #define TARGET
 
 #include <iostream>
-#include <string>
 #include <vector>
-#include <array>
-#include <cmath>
 
 #include <Eigen/Dense>
 
 // using namespace std;
-using namespace Eigen;
+// using namespace Eigen;
 
 
 namespace Attitude_estimation{
 
-	class World; 
+	using namespace Eigen;
+
+	class World; // Forward declaration
 
 	/* ########## Target (base class for all targets) ########## */
 	class Target

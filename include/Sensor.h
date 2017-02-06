@@ -2,7 +2,6 @@
 #define SENSOR
 
 #include <iostream>
-#include <cmath>
 #include <random>
 
 #include <Eigen/Dense>
@@ -10,11 +9,14 @@
 #include "Lie_group.h"
 
 // using namespace std;
-using namespace Eigen;
+// using namespace Eigen;
 
 
 namespace Attitude_estimation{
 
+	using namespace Eigen;
+
+	// Forward declaration
 	class World;
 	class Target;
 

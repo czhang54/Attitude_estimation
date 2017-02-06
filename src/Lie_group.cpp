@@ -8,21 +8,22 @@
 #include "Lie_group.h"
 
 // using namespace std;
-using namespace Eigen;
+// using namespace Eigen;
 
+/* This file defines functions related to computations using quaternions and/or rotation matrices */
 
 // Compute product of two quaternions
 quaternion quaternion_product(const quaternion &q1, const quaternion &q2){
 	quaternion q;
-	Vector3d qv1 = q1.tail(3);
-	Vector3d qv2 = q2.tail(3);
+	Eigen::Vector3d qv1 = q1.tail(3);
+	Eigen::Vector3d qv2 = q2.tail(3);
 	q(0) = q1(0)*q2(0) - qv1.dot(qv2);
 	q.tail(3) = q1(0)*qv2 + q2(0)*qv1 + qv1.cross(qv2);
 	return q;
 }
 
 // Update quaternion according to angular velocity vector defined in body/global frame
-quaternion dq(const quaternion &q, const Vector3d &omega, std::string frame){
+quaternion dq(const quaternion &q, const Eigen::Vector3d &omega, std::string frame){
 	quaternion exp;
 	double norm = omega.norm();
 	exp(0) = std::cos(norm/2.0);
@@ -37,8 +38,8 @@ quaternion dq(const quaternion &q, const Vector3d &omega, std::string frame){
 }
 
 // Convert quaternion to rotation matrix
-Matrix3d q2R(const quaternion &q){
-	Matrix3d R = Matrix3d::Zero();
+Eigen::Matrix3d q2R(const quaternion &q){
+	Eigen::Matrix3d R = Eigen::Matrix3d::Zero();
 	for (int d=0; d<3; ++d){
 		R(d,d) = q(0)*q(0) + q(d)*q(d) - 0.5;
 	}
@@ -53,8 +54,8 @@ Matrix3d q2R(const quaternion &q){
 }
 
 // Compute skew-symmetric matrix from given vector
-Matrix3d skew(const Vector3d &v){
-	Matrix3d M = Matrix3d::Zero();
+Eigen::Matrix3d skew(const Eigen::Vector3d &v){
+	Eigen::Matrix3d M = Eigen::Matrix3d::Zero();
 	M(2,1) = v(0);
 	M(1,2) = -v(0);
 	M(0,2) = v(1);
@@ -66,12 +67,12 @@ Matrix3d skew(const Vector3d &v){
 }
 
 // Create identity matrix of given size
-MatrixXd identity(int d){
-	return MatrixXd::Identity(d,d);
+Eigen::MatrixXd identity(int d){
+	return Eigen::MatrixXd::Identity(d,d);
 }
 
 // Convert MRP to quaternion
-quaternion MRP2q(const Vector3d &m){
+quaternion MRP2q(const Eigen::Vector3d &m){
 	quaternion q = quaternion::Zero();
 	double norm = m.squaredNorm();
 	q(0) = (16-norm)/(16+norm);
@@ -90,10 +91,10 @@ quaternion inverse_quaternion(const quaternion &q){
 }
 
 // Compute quaternion from angle-axis parameter
-quaternion angle_axis(const Vector3d axis, double angle){
+quaternion angle_axis(const Eigen::Vector3d axis, double angle){
 	quaternion q = quaternion::Zero();
 	double theta = angle*M_PI/180.0; 
-	Vector3d omega = axis/(axis.norm());
+	Eigen::Vector3d omega = axis/(axis.norm());
 	q(0) = std::cos(theta/2.0);
 	q.tail(3) = omega*std::sin(theta/2.0);
 
@@ -101,12 +102,12 @@ quaternion angle_axis(const Vector3d axis, double angle){
 }
 
 // Compute statistical mean of quaternion samples
-quaternion quaternion_mean(MatrixXd &quaternions){
-	MatrixXd M = quaternions*(quaternions.transpose())/(static_cast<double>(quaternions.cols()));
+quaternion quaternion_mean(Eigen::MatrixXd &quaternions){
+	Eigen::MatrixXd M = quaternions*(quaternions.transpose())/(static_cast<double>(quaternions.cols()));
 	// Solve eigenvalues and eigenvectors
-	SelfAdjointEigenSolver<MatrixXd> solver(M);
-	ArrayXd eigenvalues = solver.eigenvalues().array();
-	ArrayXd::Index max_loc;
+	Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> solver(M);
+	Eigen::ArrayXd eigenvalues = solver.eigenvalues().array();
+	Eigen::ArrayXd::Index max_loc;
 	double max_eigenvalue = eigenvalues.maxCoeff(&max_loc);
 
 	return solver.eigenvectors().col(max_loc);

@@ -6,12 +6,14 @@
 #include <Eigen/Dense>
 
 // using namespace std;
-using namespace Eigen;
+// using namespace Eigen;
 
 namespace Attitude_estimation{
 
-	class World;
-	
+	using namespace Eigen;
+
+	class World; // Forward declaration
+
 	/* ########## FilterBase (base class for all filters) ########## */
 	class FilterBase
 	{
