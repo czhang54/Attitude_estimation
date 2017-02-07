@@ -1,3 +1,3 @@
 # Attitude_estimation
 
-C++ code for simulating different filters for attitude estimation.
+C++ code simulating nonlinear filters for attitude estimation.
