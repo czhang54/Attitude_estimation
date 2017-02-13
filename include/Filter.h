@@ -163,7 +163,7 @@ namespace Attitude_estimation{
 
 	typedef Matrix<MatrixXd, Dynamic, 1> Tensor3Xd; // 3d array (tensor)
 
-	/* Feedback particle filter */
+	/* Feedback particle filter (FPF) */
 	class FPF: public ParticleFilterBase
 	{
 		std::string gain_solver; // Name of gain solver
@@ -181,10 +181,10 @@ namespace Attitude_estimation{
 		// Galerkin method to solve gain function
 		void galerkin(VectorXd &h_diff, MatrixXd &K);
 
-		// Compute basis functions on SO(3) for each particle
+		// Compute basis functions on SO(3) for Galerkin
 		void compute_basis_SO3(const MatrixXd &particles, MatrixXd &Phi);
 
-		// Compute gradient of basis functions on SO(3) for each particle
+		// Compute gradient of basis functions on SO(3) for Galerkin
 		void compute_basisGrad_SO3(const MatrixXd &particles, Tensor3Xd &gradPhi);
 
 		virtual std::ostream& message(std::ostream &out) const override;
