@@ -55,6 +55,8 @@ namespace Attitude_estimation{
 
 
 	/* ########## Kalman filters ########## */
+	
+	/* Base class for Kalman filters */
 	class KalmanFilterBase: public FilterBase
 	{
 
@@ -74,7 +76,7 @@ namespace Attitude_estimation{
 
 	};
 
-
+	/* Multiplicative EKF (MEKF) */
 	class MEKF: public KalmanFilterBase
 	{
 
@@ -92,7 +94,7 @@ namespace Attitude_estimation{
 
 	};
 
-
+	/* Invariant EKF (IEKF) */
 	class IEKF: public KalmanFilterBase
 	{
 
@@ -110,6 +112,8 @@ namespace Attitude_estimation{
 
 
 	/* ########## Particle filters ########## */
+	
+	/* Base class of particle filters */
 	class ParticleFilterBase: public FilterBase{
 
 	protected:
@@ -135,7 +139,7 @@ namespace Attitude_estimation{
 	};
 
 
-	/* ParticleFilter (Classical particle filter using sequential imprtance sampling resampling) */
+	/* Particle Filter (Classical particle filter using sequential imprtance sampling resampling) */
 	class ParticleFilter: public ParticleFilterBase
 	{
 
