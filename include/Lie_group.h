@@ -12,7 +12,7 @@
 
 /* This header file declares functions related to computations using quaternions and/or rotation matrices */
 
-typedef Eigen::Vector4d quaternion;
+typedef Eigen::Vector4d quaternion; // One can alternatively use the Quaternion class provided by Eigen/Geometry
 typedef Eigen::Matrix3d RotationMatrix;
 
 // Compute product of two quaternions
