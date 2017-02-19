@@ -15,13 +15,13 @@ namespace attitude_estimation{
 	class ParticleFilter: public ParticleFilterBase
 	{
 
-		double diffuse_kernel; // Noise parameter to diffuse particles after resampling
+		double diffuse_kernel_; // Noise parameter to diffuse particles after resampling
 
 	public:
 
 		// Constructor
 		ParticleFilter(const VectorXd &IC_mean, const VectorXd &IC_std, const int num_particles, const double diffuse_kernel)
-			: ParticleFilterBase(IC_mean, IC_std, num_particles), diffuse_kernel(diffuse_kernel) {}
+			: ParticleFilterBase(IC_mean, IC_std, num_particles), diffuse_kernel_(diffuse_kernel) {}
 
 		// Run particle filter algorithm for one step
 		virtual void update(int TI, double dt, std::default_random_engine &generator) override;

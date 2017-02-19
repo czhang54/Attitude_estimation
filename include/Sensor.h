@@ -71,13 +71,13 @@ namespace attitude_estimation{
 	/* Accelerometer class */
 	class Accelerometer: public SensorBase
 	{
-		Vector3d gravity; // Gravity vector
+		Vector3d gravity_; // Gravity vector
 
 	public:
 
 		// Constructor
 		Accelerometer(int dim_sensor, const VectorXd &noise_std, const Vector3d &gravity)
-			: SensorBase(dim_sensor, noise_std), gravity(gravity) {}
+			: SensorBase(dim_sensor, noise_std), gravity_(gravity) {}
 
 		// Model of accelerometer
 		virtual VectorXd model(const quaternion &q) override;
@@ -95,13 +95,13 @@ namespace attitude_estimation{
 
 	class Magnetometer: public SensorBase{
 
-		Vector3d magnetic_field;
+		Vector3d magnetic_field_;
 
 	public:
 
 		// Constructor
 		Magnetometer(int dim_sensor, const VectorXd &noise_std, const Vector3d &magnetic_field)
-			: SensorBase(dim_sensor, noise_std), magnetic_field(magnetic_field) {}
+			: SensorBase(dim_sensor, noise_std), magnetic_field_(magnetic_field) {}
 
 		// Model of magnetometer
 		virtual VectorXd model(const quaternion &q) override;

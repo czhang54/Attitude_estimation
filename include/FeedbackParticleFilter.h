@@ -18,15 +18,15 @@ namespace attitude_estimation{
 	/* Feedback particle filter */
 	class FeedbackParticleFilter: public ParticleFilterBase
 	{
-		std::string gain_solver; // Name of gain solver
-		int TI_subdivide; // Maximum number of filter steps that further sub-divided
-		int num_subdivide; // Number of subdivided steps within each normal step
+		std::string gain_solver_; // Name of gain solver
+		int TI_subdivide_; // Maximum number of filter steps that further sub-divided
+		int num_subdivide_; // Number of subdivided steps within each normal step
 	 
 	public:
 
 		// Constructor
 		FeedbackParticleFilter(const VectorXd &IC_mean, const VectorXd &IC_std, const int num_particles, std::string gain_solver, int TI_subdivide=0, int num_subdivide=1)
-			: ParticleFilterBase(IC_mean, IC_std, num_particles), gain_solver(gain_solver), TI_subdivide(TI_subdivide), num_subdivide(num_subdivide) {}
+			: ParticleFilterBase(IC_mean, IC_std, num_particles), gain_solver_(gain_solver), TI_subdivide_(TI_subdivide), num_subdivide_(num_subdivide) {}
 
 		// Run FPF algorithm for one iteration
 		virtual void update(int TI, double dt, std::default_random_engine &generator) override;
