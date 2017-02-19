@@ -12,17 +12,17 @@
 // using namespace Eigen;
 
 
-namespace Attitude_estimation{
+namespace attitude_estimation{
 
 	/* ########## Target (base class for all targets) definitions ########## */
-	void Target::initialize(){
+	void TargetBase::initialize(){
 		state = Eigen::MatrixXd::Zero(world->get_state_dim(), world->get_time());
 		angular_velocity = Eigen::MatrixXd::Zero(world->get_space_dim(), world->get_time());
 		state.col(0) = IC; // Deterministic initialization is used by default
 	}
 
 
-	void Target::move(int TI, double dt, std::default_random_engine &generator){
+	void TargetBase::move(int TI, double dt, std::default_random_engine &generator){
 
 		state.col(TI+1) = state.col(TI); // Target does not move for base class
 	}
@@ -47,7 +47,7 @@ namespace Attitude_estimation{
 	}
 
 
-}
+} // End of namespace attitude_estimation
 
 
 
