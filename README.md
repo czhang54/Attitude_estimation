@@ -18,9 +18,9 @@ Requirement:
  
 The project was tested on Mac OS 10.12 using g++ 4.2.1.
 To compile and run the project in terminal: 
-  + cd example
-  + g++ -std=c++11 -I ./../include -c ./../src/*.cpp example.cpp
-  + g++ *.o -o example
-  + ./example
+  + cd test
+  + g++ -std=c++11 -I ./../include -c ./../src/*.cpp test.cpp
+  + g++ *.o -o test
+  + ./test
 
 For an overview of relevant attitude filters, please refer to the tutorial article attitude_filter.pdf
