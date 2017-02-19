@@ -6,7 +6,7 @@ project("Attitude Estimation")
 #find_package( Eigen REQUIRED ) # find_package() is NOT needed since Eigen is a header-only library
 include_directories(/usr/local/Cellar/eigen/3.3.1/include) # Replace with actual include path of Eigen
 
-set (CMAKE_CXX_STANDARD 11)
+set (CMAKE_CXX_STANDARD 11) # Choose C++ version to compile
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(include) # Optional, maybe because this include directory is added in src/CMakeLists.txt
