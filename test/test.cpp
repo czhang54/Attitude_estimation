@@ -1,17 +1,36 @@
+
+/* This test program performs a complete simulation of several filters for attitude estimation. 
+   This can be a prototype for research purposes to study and compare attitude filters.
+
+   Filters include:
+   (1) Multiplicative EKF (MEKF), 
+   (2) Invariant EKF (IEKF),
+   (3) Particle filter (PF),
+   (4) Feedback particle filter (FPF) (our new filter).
+
+   To implement the filter, target and sensor measurements are also generated. 
+   Sensors include:
+   (1) Accelerometer
+   (2) Magnetometer
+
+   The entire code structure is expandable, which allows future addition of more types of targets, sensors and filters.
+*/
+
 #include <iostream>
 #include <vector>
 #include <random>
 
+// Eigen is required
 #include <Eigen/Dense>
 
 // Header guard is needed to avoid duplicate include
 
-#include "World.h"
-#include "Target.h"
-#include "Sensor.h"
-#include "Lie_group.h" 
+#include "World.h" // Simulation coordinator
+#include "Target.h" // Contains all target objects
+#include "Sensor.h" // Contains all sensor objects
+#include "Lie_group.h" // Contains all computations related to Lie groups and quaternions
 
-// Include filters
+// Include different filters
 #include "Filter.h"
 #include "MultiplicativeEKF.h"
 #include "InvariantEKF.h"
