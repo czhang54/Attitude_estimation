@@ -11,7 +11,7 @@ I am continuously working to make this project serve as a library for more gener
 Directories:
   + include: contains all the headers
   + src: contains all the source files
-  + example: contains test programs to do simulations
+  + test: contains test programs to do some demo simulations
  
 Requirement:
   + Eigen: a convenient matrix library that can be downloaded at http://eigen.tuxfamily.org/index.php?title=Main_Page#Download
