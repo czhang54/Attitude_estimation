@@ -6,7 +6,9 @@ It is designed to be flexible for the user to add:
   + Sensor models
   + Filter algorithms
   
-I am continuously working to make this project serve as a library for more general purposes.
+I am continuously working to make this project serve as a library for more general purposes. 
+
+For an overview of relevant attitude filters, please refer to the tutorial article attitude_filter.pdf
 
 Directories:
   + include: contains all the headers
@@ -23,4 +25,9 @@ To compile and run the project in terminal:
   + g++ *.o -o test
   + ./test
 
-For an overview of relevant attitude filters, please refer to the tutorial article attitude_filter.pdf
+Alternatively, one can build/compile the project using the provided CMakeLists.txt:
+  + mkdir build
+  + cd mkdir 
+  + cmake -G "Unix Makefiles" ..    # Or other types of make files as appropriate
+  + make    # This compiles the project
+  + ./attitude_estimation    # attitude_estimation is the name of the executable
