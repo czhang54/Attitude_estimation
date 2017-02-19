@@ -6,7 +6,7 @@
    (1) Multiplicative EKF (MEKF), 
    (2) Invariant EKF (IEKF),
    (3) Particle filter (PF),
-   (4) Feedback particle filter (FPF) (our new filter).
+   (4) Feedback particle filter (FPF) (our new filter, see arXiv preprint: https://arxiv.org/abs/1701.02416).
 
    To implement the filter, target and sensor measurements are also generated. 
    Sensors include:
