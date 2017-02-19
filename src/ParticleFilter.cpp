@@ -61,7 +61,7 @@ namespace attitude_estimation{
 		for (int i=0; i<N; i++){	
 			VectorXd particle_LA(dim_space);
 			for (int d=0; d<dim_space; d++){
-				std::normal_distribution<double> normal(0, diffuse_kernel);
+				std::normal_distribution<double> normal(0, diffuse_kernel_);
 				particle_LA(d) = normal(generator);
 			}
 			particles.col(i) = dq(particles.col(i), particle_LA);

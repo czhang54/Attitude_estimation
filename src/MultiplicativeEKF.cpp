@@ -56,7 +56,7 @@ namespace attitude_estimation{
 	}
 
 	std::ostream& MultiplicativeEKF::message(std::ostream &out) const {
-		out << "MEKF will be implemented" << '\n';
+		out << "Multiplicative EKF will be implemented" << '\n';
 		return out;
 	}
 

@@ -27,11 +27,11 @@ namespace attitude_estimation{
 		VectorXd target_velocity = world->get_target()->get_velocity().col(TI);
 		VectorXd process_noise_std = world->get_target()->get_process_noise();
 
-		double dt_subdivide = dt/(static_cast<double>(TI_subdivide));
+		double dt_subdivide = dt/(static_cast<double>(TI_subdivide_));
 
-		if (TI >= TI_subdivide){num_subdivide = 1;}
+		if (TI >= TI_subdivide_){num_subdivide_ = 1;}
 
-		for (int n=0; n<num_subdivide; ++n){
+		for (int n=0; n<num_subdivide_; ++n){
 
 			// Compute control in Lie algebra for each particle
 			MatrixXd control = MatrixXd::Zero(dim_space, N);
@@ -54,7 +54,7 @@ namespace attitude_estimation{
 					galerkin(h_diff, K); 
 
 					for (int n=0; n<dim_space; ++n){
-						RowVectorXd KI = (K.row(n).array())*(I.transpose().array())/(sensor_noise_cov(j)*num_subdivide);
+						RowVectorXd KI = (K.row(n).array())*(I.transpose().array())/(sensor_noise_cov(j)*num_subdivide_);
 						control.row(n) = control.row(n) + KI;
 					}
 				}
@@ -171,7 +171,7 @@ namespace attitude_estimation{
 
 
 	std::ostream& FeedbackParticleFilter::message(std::ostream &out) const {
-		out << "FPF with " << gain_solver << " gain solver will be implemented" << '\n';
+		out << "Feedback particle filter with " << gain_solver_ << " gain solver will be implemented" << '\n';
 		return out;
 	}
 

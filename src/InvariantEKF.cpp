@@ -58,7 +58,7 @@ namespace attitude_estimation{
 	}
 
 	std::ostream& InvariantEKF::message(std::ostream &out) const {
-		out << "IEKF will be implemented" << '\n';
+		out << "Invariant EKF will be implemented" << '\n';
 		return out;
 	}
 

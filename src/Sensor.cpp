@@ -59,7 +59,7 @@ namespace attitude_estimation{
 
 	VectorXd Accelerometer::model(const quaternion &q){
 
-		return -(q2R(q).transpose())*gravity;
+		return -(q2R(q).transpose())*gravity_;
 	}
 
 	MatrixXd Accelerometer::jacobian(const quaternion &q){
@@ -90,7 +90,7 @@ namespace attitude_estimation{
 	}
 
 	VectorXd Magnetometer::model(const quaternion &q){
-		return (q2R(q).transpose())*magnetic_field;
+		return (q2R(q).transpose())*magnetic_field_;
 	}
 
 	MatrixXd Magnetometer::jacobian(const quaternion &q){
