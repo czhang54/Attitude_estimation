@@ -12,30 +12,30 @@
 // using namespace Eigen;
 
 
-namespace Attitude_estimation{
+namespace attitude_estimation{
 
 	using namespace Eigen;
 
-	/* ########## Sensor (base class for all sensors) definitions ########## */
-	void Sensor::initialize(){
+	/* ########## Base class for all sensors ########## */
+	void SensorBase::initialize(){
 		measurements = MatrixXd::Zero(dim, world->get_time());
 	}
 
-	VectorXd Sensor::model(const quaternion &q){
+	VectorXd SensorBase::model(const quaternion &q){
 		Vector3d Y = Vector3d::Zero();
 		return Y;
 	}
 
-	MatrixXd Sensor::jacobian(const quaternion &q){
+	MatrixXd SensorBase::jacobian(const quaternion &q){
 		MatrixXd H = MatrixXd::Zero(dim, 3);
 		return H;
 	}
 
-	void Sensor::observe(int TI, double dt, std::default_random_engine &generator){
+	void SensorBase::observe(int TI, double dt, std::default_random_engine &generator){
 		measurements.col(TI) = VectorXd::Zero(dim); // No measurement is made for base class
 	}
 
-	std::ostream& Sensor::message(std::ostream &out) const {
+	std::ostream& SensorBase::message(std::ostream &out) const {
 		out << "Sensor is used" << '\n';
 		return out;
 	}
@@ -59,7 +59,7 @@ namespace Attitude_estimation{
 
 	VectorXd Accelerometer::model(const quaternion &q){
 
-		return -(q2R(q).transpose())*gravity;
+		return -(q2R(q).transpose())*gravity_;
 	}
 
 	MatrixXd Accelerometer::jacobian(const quaternion &q){
@@ -90,7 +90,7 @@ namespace Attitude_estimation{
 	}
 
 	VectorXd Magnetometer::model(const quaternion &q){
-		return (q2R(q).transpose())*magnetic_field;
+		return (q2R(q).transpose())*magnetic_field_;
 	}
 
 	MatrixXd Magnetometer::jacobian(const quaternion &q){
@@ -102,8 +102,8 @@ namespace Attitude_estimation{
 		out << "Magnetometer is used" << '\n';
 		return out;
 	}
-
-}
+ 
+} // End of namespace attitude_estimation
 
 
 

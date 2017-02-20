@@ -13,14 +13,14 @@
 // using namespace Eigen;
 
 
-namespace Attitude_estimation{
+namespace attitude_estimation{
 
 	World::World(double start, double stop, double step, int dim_space, int dim_state){
 		// dim = d;
 		num_times = static_cast<int>((stop-start)/step) + 1;
 		Eigen::RowVectorXd Time = RowVectorXd::LinSpaced(num_times, start, stop);
 		time = Time;
-		this->dim_space = dim_space; // MUST use this-> when assigning a variable using input with same identifier!
+		this->dim_space = dim_space; // Use this-> identifier names coincide!
 		this->dim_state = dim_state;
 	}
 
@@ -30,9 +30,9 @@ namespace Attitude_estimation{
 
 	int World::get_state_dim() const {return dim_state;}
 
-	Target* World::get_target() const {return target;}
+	TargetBase* World::get_target() const {return target;}
 
-	std::vector<Sensor*> World::get_sensor() const {return sensor_list;}
+	std::vector<SensorBase*> World::get_sensor() const {return sensor_list;}
 
 	std::vector<FilterBase*> World::get_filter() const {return filter_list;}
 
@@ -42,11 +42,13 @@ namespace Attitude_estimation{
 		return out;
 	}
 
-	void World::add_target(Target *t){
+	// Add a target
+	void World::add_target(TargetBase *t){
 		target = t;
 		t->world = this; // World needs to be a friend of Target in order to do this
 	}
 
+	// Simulate target
 	void World::simulate_target(std::default_random_engine &generator){
 		std::cout << "Simulating target..." << '\n';
 		for (int TI=0; TI<num_times-1; ++TI){
@@ -54,29 +56,33 @@ namespace Attitude_estimation{
 		}
 	}
 
-	void World::add_sensor(Sensor *s){
+	// Add a sensor
+	void World::add_sensor(SensorBase *s){
 		sensor_list.push_back(s);
 		s->world = this;
 	}
 
-	void World::simulate_sensor(std::default_random_engine &generator){
+	// Simulate all sensors in sensor_list
+	void World::simulate_sensors(std::default_random_engine &generator){
 		std::cout << "Simulating " << sensor_list.size() << " sensors..." << '\n';
 		for (int TI=0; TI<num_times; ++TI){
 			double dt;
 			if (TI == 0){dt = time[TI+1]-time[TI];}
 			else {dt = time[TI]-time[TI-1];}
-			for (Sensor *s: sensor_list){
+			for (SensorBase *s: sensor_list){
 				s->observe(TI, dt, generator);
 			}
 		}
 	}
 
+	// Add a filter
 	void World::add_filter(FilterBase *f){
 		filter_list.push_back(f);
 		f->world = this;
 	}
 
-	void World::simulate_filter(std::default_random_engine &generator){
+	// Simulate all filters in filter_list
+	void World::simulate_filters(std::default_random_engine &generator){
 		std::cout << "Simulating " << filter_list.size() << " filters..." << '\n';
 		for (int TI=0; TI<num_times-1; ++TI){
 			std::cout  << "TI = " << TI << std::endl;
@@ -86,7 +92,9 @@ namespace Attitude_estimation{
 		}
 	}
 
-}
+
+
+} // End of namespace attitude_estimation
 
 
 

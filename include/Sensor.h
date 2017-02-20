@@ -1,3 +1,6 @@
+
+/* This header defines all types of the sensor objects */
+
 #ifndef SENSOR
 #define SENSOR
 
@@ -12,16 +15,16 @@
 // using namespace Eigen;
 
 
-namespace Attitude_estimation{
+namespace attitude_estimation{
 
 	using namespace Eigen;
 
 	// Forward declaration
 	class World;
-	class Target;
+	class TargetBase;
 
-	/* ########## Sensor (base class for all sensors) ########## */
-	class Sensor
+	/* ########## Base class for all sensors ########## */
+	class SensorBase
 	{
 	protected:
 
@@ -32,7 +35,8 @@ namespace Attitude_estimation{
 
 	public:
 
-		Sensor(int dim_sensor, const VectorXd &noise_std)
+		// Constructor
+		SensorBase(int dim_sensor, const VectorXd &noise_std)
 			: dim(dim_sensor), noise_std(noise_std) {};
 
 		// Give access to acquire the measurement data, used by filters
@@ -53,7 +57,7 @@ namespace Attitude_estimation{
 		// Generate measurements at ALL times
 		virtual void observe(int TI, double dt, std::default_random_engine &generator);
 
-		friend std::ostream& operator<<(std::ostream &out, const Sensor *s){
+		friend std::ostream& operator<<(std::ostream &out, const SensorBase *s){
 			return s->message(out);
 		}
 
@@ -65,14 +69,15 @@ namespace Attitude_estimation{
 
 
 	/* Accelerometer class */
-	class Accelerometer: public Sensor
+	class Accelerometer: public SensorBase
 	{
-		Vector3d gravity; // Gravity vector
+		Vector3d gravity_; // Gravity vector
 
 	public:
 
+		// Constructor
 		Accelerometer(int dim_sensor, const VectorXd &noise_std, const Vector3d &gravity)
-			: Sensor(dim_sensor, noise_std), gravity(gravity) {}
+			: SensorBase(dim_sensor, noise_std), gravity_(gravity) {}
 
 		// Model of accelerometer
 		virtual VectorXd model(const quaternion &q) override;
@@ -88,14 +93,15 @@ namespace Attitude_estimation{
 	};
 
 
-	class Magnetometer: public Sensor{
+	class Magnetometer: public SensorBase{
 
-		Vector3d magnetic_field;
+		Vector3d magnetic_field_;
 
 	public:
 
+		// Constructor
 		Magnetometer(int dim_sensor, const VectorXd &noise_std, const Vector3d &magnetic_field)
-			: Sensor(dim_sensor, noise_std), magnetic_field(magnetic_field) {}
+			: SensorBase(dim_sensor, noise_std), magnetic_field_(magnetic_field) {}
 
 		// Model of magnetometer
 		virtual VectorXd model(const quaternion &q) override;
@@ -110,7 +116,7 @@ namespace Attitude_estimation{
 
 	};
 
-}
+} // End of namespace attitude_estimation
 
 
 
