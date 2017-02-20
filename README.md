@@ -8,7 +8,7 @@ It is designed to be flexible for the user to add:
   
 I am continuously working to make this project serve as a library for more general purposes. 
 
-For an overview of relevant attitude filters, please refer to the tutorial article attitude_filter.pdf
+For an overview of relevant attitude filters, please refer to the tutorial article Attitude_filters.pdf
 
 Directories:
   + include: contains all the headers
