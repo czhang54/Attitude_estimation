@@ -31,7 +31,7 @@ To compile and run the test demo (test.cpp) using command line:
 Alternatively, one can build/compile the project using the provided CMakeLists.txt:
 ```
   mkdir build
-  cd mkdir 
+  cd build 
   cmake -G "Unix Makefiles" ..    
   make    
   ./attitude_estimation    
