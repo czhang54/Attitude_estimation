@@ -4,11 +4,11 @@ add_library(attitude_estimation_source
 	World.cpp 
 	Target.cpp 
 	Sensor.cpp 
-	Filter.cpp 
-	MultiplicativeEKF.cpp 
-	InvariantEKF.cpp 
-	ParticleFilter.cpp 
-	FeedbackParticleFilter.cpp
+	Filters/Filter.cpp 
+	Filters/MultiplicativeEKF.cpp 
+	Filters/InvariantEKF.cpp 
+	Filters/ParticleFilter.cpp 
+	Filters/FeedbackParticleFilter.cpp
 )
 
 # Include headers from a separate directory
