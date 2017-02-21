@@ -1,10 +1,10 @@
 # Attitude_estimation
 
 This repository contains C++ codes for simulating nonlinear filters for attitude estimation. 
-It is designed to be flexible for the user to add:
-  + Target models
-  + Sensor models
-  + Filter algorithms
+The code structure is expandable so that one can add more:
+  + Target models (src/Target.cpp)
+  + Sensor models (src/Sensor.cpp)
+  + Filter algorithms (src/Filters/*.cpp)
   
 I am continuously working to make this project serve as a library for more general purposes. 
 
